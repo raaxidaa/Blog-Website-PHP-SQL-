@@ -29,6 +29,11 @@ $blogs = $blogsquery->fetchAll(PDO::FETCH_ASSOC);
             display: inline-block;
             position: relative;
         }
+        .card p{
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
         .card img {
           width: 100%;
             height: 200px;
@@ -84,6 +89,7 @@ $blogs = $blogsquery->fetchAll(PDO::FETCH_ASSOC);
             echo "<img src='../uploads/" . htmlspecialchars($blog['blog_img']) . "' alt='" . htmlspecialchars($blog['title']) . "'>";
             echo "<h3>" . htmlspecialchars($blog['title']) . "</h3>";
             echo "<p>" . htmlspecialchars($blog['description']) . "</p>";
+            echo "<a href='blogdetails.php?id=" . htmlspecialchars($blog['id']) . "' class='btn btn-primary'>Read More</a>";
             echo "</div>"; 
         }
     }

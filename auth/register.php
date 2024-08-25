@@ -117,7 +117,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <?php } ?>
                 </div>
                 <div>
-                    <label for="dob">DOB</label>
+                   <label for="dob">Dob</label>
                     <input type="date" name="dob">
                     <?php if (isset($errors["dob"])) { ?>
                         <span style="color:red;"> <?php echo $errors['dob']; ?></span>

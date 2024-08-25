@@ -3,6 +3,10 @@ include_once '../check-url.php';
 require_once '../config/database.php';
 require_once '../helper/helper.php';
 
+$limit = 6;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $limit;
+
 
 if (isset($_POST['update_status'])) {
     $userId = intval($_POST['user_id']);
@@ -12,11 +16,17 @@ if (isset($_POST['update_status'])) {
     $stmt->execute([':active' => $active, ':id' => $userId]);
 }
 
+$countSql = "SELECT COUNT(*) AS total FROM users WHERE role = 0";
+$countStmt = $connection->query($countSql);
+$totalUsers = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+$totalPages = ceil($totalUsers / $limit);
 
-$sql = "SELECT * FROM users WHERE role=0";
-$stmt = $connection->query($sql);
+$sql = "SELECT * FROM users WHERE role = 0 LIMIT :limit OFFSET :offset";
+$stmt = $connection->prepare($sql);
+$stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+$stmt->execute();
 $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -25,7 +35,7 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Management</title>
     <style>
-          body {
+        body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
@@ -91,21 +101,40 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
             padding-bottom: 10px;
             margin-bottom: 20px;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
         }
+
         table, th, td {
             border: 1px solid black;
         }
+
         th, td {
             padding: 10px;
             text-align: left;
         }
+
         .status-toggle {
             cursor: pointer;
             color: blue;
             text-decoration: underline;
+        }
+
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .pagination a {
+            margin: 0 5px;
+            text-decoration: none;
+            color: black;
+        }
+
+        .pagination .active {
+            font-weight: bold;
         }
     </style>
 </head>
@@ -157,6 +186,20 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <?php endforeach; ?>
                 </tbody>
             </table>
+
+            <div class="pagination">
+                <?php if ($page > 1): ?>
+                    <a href="?page=<?php echo $page - 1; ?>">« Previous</a>
+                <?php endif; ?>
+
+                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                    <a href="?page=<?php echo $i; ?>" class="<?php echo $i == $page ? 'active' : ''; ?>"><?php echo $i; ?></a>
+                <?php endfor; ?>
+
+                <?php if ($page < $totalPages): ?>
+                    <a href="?page=<?php echo $page + 1; ?>">Next »</a>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 </body>

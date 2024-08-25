@@ -1,3 +1,6 @@
+<?php 
+include_once '../check-url.php';
+?>
 <!DOCTYPE html>
 <html lang="en">
 

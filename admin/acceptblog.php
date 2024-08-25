@@ -3,6 +3,9 @@ include_once '../check-url.php';
 require_once '../config/database.php';
 require_once '../helper/helper.php';
 
+$limit = 6; 
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $limit;
 
 if (isset($_POST['update_status'])) {
     $blogId = intval($_POST['blog_id']);
@@ -12,8 +15,20 @@ if (isset($_POST['update_status'])) {
     $stmt->execute([':is_publish' => $isPublished, ':id' => $blogId]);
 }
 
-$sql = "SELECT * FROM blogs";
-$stmt = $connection->query($sql);
+
+$countSql = "SELECT COUNT(*) AS total FROM blogs";
+$countStmt = $connection->query($countSql);
+$totalBlogs = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+$totalPages = ceil($totalBlogs / $limit);
+
+
+
+
+$sql = "SELECT * FROM blogs LIMIT :limit OFFSET :offset";
+$stmt = $connection->prepare($sql);
+$stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+$stmt->execute();
 $blogs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
@@ -109,6 +124,21 @@ $blogs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             color: blue;
             text-decoration: underline;
         }
+
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .pagination a {
+            margin: 0 5px;
+            text-decoration: none;
+            color: black;
+        }
+
+        .pagination .active {
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -159,6 +189,20 @@ $blogs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <?php endforeach; ?>
                 </tbody>
             </table>
+
+            <div class="pagination">
+                <?php if ($page > 1): ?>
+                    <a href="?page=<?php echo $page - 1; ?>">« Previous</a>
+                <?php endif; ?>
+
+                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                    <a href="?page=<?php echo $i; ?>" class="<?php echo $i == $page ? 'active' : ''; ?>"><?php echo $i; ?></a>
+                <?php endfor; ?>
+
+                <?php if ($page < $totalPages): ?>
+                    <a href="?page=<?php echo $page + 1; ?>">Next »</a>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 </body>
